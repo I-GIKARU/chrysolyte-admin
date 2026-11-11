@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**/*.md"
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-chrysolyte-admin-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      # Baked into the client bundle. The browser calls /api on this app's
+      # own origin; next.config.ts proxies it to the API_PROXY_TARGET.
+      NEXT_PUBLIC_API_BASE: /api
+      API_PROXY_TARGET: http://127.0.0.1:8091/api
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
