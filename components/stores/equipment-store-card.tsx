@@ -1,3 +1,4 @@
+import { Can } from "@/components/auth/can"
 import { AddEquipmentDialog } from "@/components/stores/add-equipment-dialog"
 import {
   StoreCard,
@@ -24,7 +25,11 @@ export function EquipmentStoreCard({ equipment }: EquipmentStoreCardProps) {
     <StoreCard
       titleId="equipment-store-heading"
       title="Equipment & tools store"
-      action={<AddEquipmentDialog />}
+      action={
+        <Can permission="equipment:create">
+          <AddEquipmentDialog />
+        </Can>
+      }
     >
       <Table className="min-w-[40rem]">
         <TableHeader>

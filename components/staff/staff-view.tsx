@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 
+import { Can } from "@/components/auth/can"
 import { AddStaffDialog } from "@/components/staff/add-staff-dialog"
 import { RemoveStaffDialog } from "@/components/staff/remove-staff-dialog"
 import { StaffActivity } from "@/components/staff/staff-activity"
@@ -76,7 +77,9 @@ export function StaffView() {
             breakdown.
           </p>
         </div>
-        <AddStaffDialog />
+        <Can permission="staff:create">
+          <AddStaffDialog />
+        </Can>
       </div>
 
       {staff.length === 0 ? (
@@ -143,7 +146,11 @@ export function StaffView() {
                             View
                           </Link>
                         </Button>
-                        <RemoveStaffDialog member={member} />
+                        <Can permission="staff:delete">
+                          <Can permission="staff:delete">
+                            <RemoveStaffDialog member={member} />
+                          </Can>
+                        </Can>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -160,7 +167,9 @@ export function StaffView() {
                   <div className="flex items-start justify-between gap-3">
                     <StaffIdentity member={member} />
                     <div className="-mt-1 -mr-1 shrink-0">
-                      <RemoveStaffDialog member={member} />
+                      <Can permission="staff:delete">
+                        <RemoveStaffDialog member={member} />
+                      </Can>
                     </div>
                   </div>
 

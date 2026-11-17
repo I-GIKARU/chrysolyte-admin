@@ -1,3 +1,4 @@
+import { Can } from "@/components/auth/can"
 import { AddSiteInstructionDialog } from "@/components/consultants/add-site-instruction-dialog"
 import {
   TableCard,
@@ -26,7 +27,11 @@ export function SiteInstructionsTable({
       titleId="instructions-register-heading"
       title="Consultant instructions register"
       titleClassName="text-xl text-heading"
-      action={<AddSiteInstructionDialog />}
+      action={
+        <Can permission="instructions:create">
+          <AddSiteInstructionDialog />
+        </Can>
+      }
     >
       <Table className="min-w-[60rem]">
         <TableHeader>

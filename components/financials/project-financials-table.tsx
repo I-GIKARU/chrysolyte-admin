@@ -4,6 +4,7 @@ import {
   tableHeadClassName,
 } from "@/components/table-card"
 import { Notice } from "@/components/notice"
+import { Can } from "@/components/auth/can"
 import { RecordTransactionDialog } from "@/components/financials/record-transaction-dialog"
 import {
   Table,
@@ -28,7 +29,11 @@ export function ProjectFinancialsTable({
       titleId="project-financials-heading"
       title="Project financials"
       titleClassName="text-xl text-heading"
-      action={<RecordTransactionDialog />}
+      action={
+        <Can permission="finance:transactions:manage">
+          <RecordTransactionDialog />
+        </Can>
+      }
     >
       <Notice>
         Only the CEO and CFO can record financial activities. Partial client

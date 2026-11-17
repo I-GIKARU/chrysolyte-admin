@@ -1,3 +1,4 @@
+import { Can } from "@/components/auth/can"
 import { AddStockItemDialog } from "@/components/stores/add-stock-item-dialog"
 import { StockNoticeBadge } from "@/components/stores/stock-notice-badge"
 import {
@@ -28,7 +29,9 @@ export function MaterialStoreCard({ store }: MaterialStoreCardProps) {
       titleId={`material-store-${store.projectId}`}
       title={title}
       action={
-        <AddStockItemDialog projectId={store.projectId} storeName={title} />
+        <Can permission="stores:create">
+          <AddStockItemDialog projectId={store.projectId} storeName={title} />
+        </Can>
       }
     >
       <Table className="min-w-[40rem]">

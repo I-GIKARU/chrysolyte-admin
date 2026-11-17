@@ -14,32 +14,45 @@ import {
 import { useRouter } from "next/navigation"
 import { WorkspaceLoader } from "@/components/workspace-loader"
 import * as authApi from "@/lib/api/auth"
+import * as rbacApi from "@/lib/api/rbac"
 import {
   clearAccessToken,
   getAccessToken,
   subscribeAccessToken,
 } from "@/lib/auth-token"
 import { onUnauthorized, refreshAccessToken } from "@/lib/axios"
-import { dashboardPages } from "@/lib/navigation"
+import { dashboardPages, getHomePath } from "@/lib/navigation"
+import { hasAnyPermission, hasPermission } from "@/lib/permissions"
 import type { LoginFormValues, AuthUser } from "@/lib/types/auth"
+import type { Role } from "@/lib/types/rbac"
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated"
 
+export interface AuthSnapshot {
+  user: AuthUser
+  permissions: string[]
+  roles: Role[]
+}
+
 interface AuthContextValue {
   user: AuthUser | null
+  permissions: string[]
+  roles: Role[]
   accessToken: string | null
   status: AuthStatus
   isLoggedIn: boolean
-  login: (values: LoginFormValues) => Promise<AuthUser>
+  login: (values: LoginFormValues) => Promise<AuthSnapshot>
   logout: () => Promise<void>
-  /** Re-fetches `/auth/me` and updates `user` (e.g. after a password change). */
-  refreshUser: () => Promise<AuthUser>
+  /** Re-fetches `/auth/me` and `/auth/permissions/me`. */
+  refreshUser: () => Promise<AuthSnapshot>
+  hasPermission: (permission: string) => boolean
+  hasAnyPermission: (permissions: readonly string[]) => boolean
 }
 
 export const LOGIN_ROUTE = "/login"
 
-/** Where a signed-in user lands after login or when visiting an auth screen. */
-export const HOME_ROUTE = "/dashboard"
+/** Fallback landing page when a user has no module access yet. */
+export const HOME_ROUTE = "/profile"
 
 /** Screens under `app/(auth)`, reachable without a session. */
 const PUBLIC_ROUTES = [LOGIN_ROUTE, "/forgot-password", "/reset-password"]
@@ -84,8 +97,12 @@ const getServerToken = () => null
 export function AuthProvider({ children }: PropsWithChildren) {
   const router = useRouter()
   const [user, setUser] = useState<AuthUser | null>(null)
+  const [permissions, setPermissions] = useState<string[]>([])
+  const [roles, setRoles] = useState<Role[]>([])
   const [status, setStatus] = useState<AuthStatus>("loading")
   const bootstrapped = useRef(false)
+  const authenticated = useRef(false)
+  const loadingIdentity = useRef(false)
 
   // Mirrors the module-level token, so consumers re-render when the axios
   // interceptor refreshes it behind the scenes.
@@ -96,13 +113,45 @@ export function AuthProvider({ children }: PropsWithChildren) {
   )
 
   const endSession = useCallback(() => {
+    authenticated.current = false
     clearAccessToken()
     setUser(null)
+    setPermissions([])
+    setRoles([])
     setStatus("unauthenticated")
   }, [])
 
-  // On load: trade the refresh cookie for an access token, load the profile,
-  // then send the visitor to the right place.
+  const loadIdentity = useCallback(async (): Promise<AuthSnapshot> => {
+    if (loadingIdentity.current) {
+      // A refresh event and a login/bootstrap can overlap; return the
+      // current state instead of firing duplicate identity requests.
+      if (user) {
+        return { user, permissions, roles }
+      }
+    }
+    loadingIdentity.current = true
+    try {
+      const [profile, access] = await Promise.all([
+        authApi.fetchMe(),
+        rbacApi.fetchMyPermissions(),
+      ])
+      setUser(profile)
+      setPermissions(access.permissions)
+      setRoles(access.roles)
+      setStatus("authenticated")
+      authenticated.current = true
+      return {
+        user: profile,
+        permissions: access.permissions,
+        roles: access.roles,
+      }
+    } finally {
+      loadingIdentity.current = false
+    }
+  }, [permissions, roles, user])
+
+  // On load: trade the refresh cookie for an access token, load the profile
+  // and effective permissions, then send the visitor to their first page.
   useEffect(() => {
     if (bootstrapped.current) return
     bootstrapped.current = true
@@ -112,11 +161,13 @@ export function AuthProvider({ children }: PropsWithChildren) {
     async function bootstrap() {
       try {
         await refreshAccessToken()
-        const profile = await authApi.fetchMe()
-        setUser(profile)
-        setStatus("authenticated")
+        const identity = await loadIdentity()
         if (pathname === "/" || isPublicRoute(pathname)) {
-          router.replace(HOME_ROUTE)
+          router.replace(
+            identity.user.must_change_password
+              ? "/profile"
+              : getHomePath(identity.permissions)
+          )
         }
       } catch {
         endSession()
@@ -125,7 +176,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     }
 
     void bootstrap()
-  }, [router, endSession])
+  }, [router, endSession, loadIdentity])
 
   // A refresh that fails mid-session (cookie expired or revoked) ends it.
   useEffect(() => {
@@ -137,19 +188,29 @@ export function AuthProvider({ children }: PropsWithChildren) {
     })
   }, [router, endSession])
 
-  const login = useCallback(async (values: LoginFormValues) => {
-    await authApi.login(values)
-    const profile = await authApi.fetchMe()
-    setUser(profile)
-    setStatus("authenticated")
-    return profile
-  }, [])
+  // The axios interceptor emits this after a successful refresh. Reload the
+  // profile and permissions because a role/project change may have caused the
+  // refresh in the first place.
+  useEffect(() => {
+    const onRefreshed = () => {
+      if (!authenticated.current) return
+      void loadIdentity().catch(() => endSession())
+    }
+    window.addEventListener("auth:refreshed", onRefreshed)
+    return () => window.removeEventListener("auth:refreshed", onRefreshed)
+  }, [loadIdentity, endSession])
+
+  const login = useCallback(
+    async (values: LoginFormValues) => {
+      await authApi.login(values)
+      return loadIdentity()
+    },
+    [loadIdentity]
+  )
 
   const refreshUser = useCallback(async () => {
-    const profile = await authApi.fetchMe()
-    setUser(profile)
-    return profile
-  }, [])
+    return loadIdentity()
+  }, [loadIdentity])
 
   const logout = useCallback(async () => {
     try {
@@ -162,14 +223,20 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
+      permissions,
+      roles,
       accessToken,
       status,
       isLoggedIn: status === "authenticated" && user !== null,
       login,
       logout,
       refreshUser,
+      hasPermission: (permission: string) =>
+        hasPermission(permissions, permission),
+      hasAnyPermission: (required: readonly string[]) =>
+        hasAnyPermission(permissions, required),
     }),
-    [user, accessToken, status, login, logout, refreshUser]
+    [user, permissions, roles, accessToken, status, login, logout, refreshUser]
   )
 
   return (

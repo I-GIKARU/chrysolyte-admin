@@ -1,3 +1,4 @@
+import { Can } from "@/components/auth/can"
 import { AddDeliverableDialog } from "@/components/design/add-deliverable-dialog"
 import {
   TableCard,
@@ -26,7 +27,11 @@ export function DesignDeliverablesTable({
       titleId="design-controls-heading"
       title="Design project controls"
       titleClassName="text-xl text-heading"
-      action={<AddDeliverableDialog />}
+      action={
+        <Can permission="design:create">
+          <AddDeliverableDialog />
+        </Can>
+      }
     >
       <Table className="min-w-[56rem]">
         <TableHeader>

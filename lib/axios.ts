@@ -68,6 +68,10 @@ export function refreshAccessToken(): Promise<string> {
       .then((response) => {
         const token = pickAccessToken(response.data)
         setAccessToken(token)
+        // The new token may carry new roles, permissions or project scope.
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new Event("auth:refreshed"))
+        }
         return token
       })
       .catch((error) => {

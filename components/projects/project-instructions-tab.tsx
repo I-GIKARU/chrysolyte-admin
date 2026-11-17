@@ -1,5 +1,6 @@
 "use client"
 
+import { Can } from "@/components/auth/can"
 import { AddSiteInstructionDialog } from "@/components/consultants/add-site-instruction-dialog"
 import {
   TableCard,
@@ -30,11 +31,13 @@ export function ProjectInstructionsTab({ projectId }: { projectId: string }) {
       title="Trackable site instructions"
       titleClassName="text-xl text-heading"
       action={
-        <AddSiteInstructionDialog
-          projectId={projectId}
-          triggerLabel="Instruction"
-          triggerClassName={tableCardActionClassName}
-        />
+        <Can permission="instructions:create">
+          <AddSiteInstructionDialog
+            projectId={projectId}
+            triggerLabel="Instruction"
+            triggerClassName={tableCardActionClassName}
+          />
+        </Can>
       }
     >
       <Table className="min-w-[48rem]">

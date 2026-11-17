@@ -10,6 +10,7 @@ import type {
   Milestone,
   MilestoneProgressFormValues,
 } from "@/lib/types/programme"
+import { useAuth } from "@/providers/auth-provider"
 
 type MilestoneProgressInputProps = {
   milestone: Pick<Milestone, "id" | "name" | "progress">
@@ -22,6 +23,8 @@ type MilestoneProgressInputProps = {
 export function MilestoneProgressInput({
   milestone,
 }: MilestoneProgressInputProps) {
+  const { hasPermission } = useAuth()
+  const canEdit = hasPermission("milestones:update")
   const updateProgress = useUpdateMilestoneProgress()
   const {
     register,
@@ -40,6 +43,14 @@ export function MilestoneProgressInput({
   }
 
   const save = handleSubmit(onSubmit)
+
+  if (!canEdit) {
+    return (
+      <span className="text-sm font-semibold tabular-nums">
+        {milestone.progress}%
+      </span>
+    )
+  }
 
   return (
     <form onSubmit={save} noValidate className="flex flex-col gap-1">

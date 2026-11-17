@@ -2,7 +2,8 @@ import { useMutation } from "@tanstack/react-query"
 import { useRouter } from "next/navigation"
 
 import type { LoginFormValues } from "@/lib/types/auth"
-import { HOME_ROUTE, useAuth } from "@/providers/auth-provider"
+import { useAuth } from "@/providers/auth-provider"
+import { getHomePath } from "@/lib/navigation"
 
 interface LoginOptions {
   data: LoginFormValues
@@ -15,8 +16,12 @@ export function useLogin() {
 
   return useMutation({
     mutationFn: ({ data }: LoginOptions) => login(data),
-    onSuccess: () => {
-      router.replace(HOME_ROUTE)
+    onSuccess: (identity) => {
+      router.replace(
+        identity.user.must_change_password
+          ? "/profile"
+          : getHomePath(identity.permissions)
+      )
     },
   })
 }

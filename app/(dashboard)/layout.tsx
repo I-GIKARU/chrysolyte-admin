@@ -1,4 +1,5 @@
 import { AppSidebar } from "@/components/app-sidebar"
+import { RequireRouteAccess } from "@/components/auth/require-route-access"
 import { SiteHeader } from "@/components/site-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 
@@ -14,7 +15,9 @@ export default function DashboardLayout({
       <AppSidebar />
       <SidebarInset className="min-w-0">
         <SiteHeader />
-        <div className="flex-1 px-4 pb-4 md:px-6 md:pb-6">{children}</div>
+        <div className="flex-1 px-4 pb-4 md:px-6 md:pb-6">
+          <RequireRouteAccess>{children}</RequireRouteAccess>
+        </div>
       </SidebarInset>
     </SidebarProvider>
   )

@@ -41,6 +41,12 @@ function ProfileCard({ user }: { user: AuthUser }) {
       label: "Last sign in",
       value: user.last_login_at ? formatDateTime(user.last_login_at) : "Never",
     },
+    {
+      label: "Projects",
+      value: user.project_ids?.length
+        ? user.project_ids.join(", ")
+        : user.project_id || "Firm-wide",
+    },
     { label: "Member since", value: formatDateTime(user.created_at) },
   ]
 
@@ -57,7 +63,11 @@ function ProfileCard({ user }: { user: AuthUser }) {
               {user.full_name}
             </h2>
             <div className="flex flex-wrap gap-1.5">
-              <Badge variant="secondary">{humanizeSlug(user.role)}</Badge>
+              {(user.roles?.length ? user.roles : [user.role]).map((role) => (
+                <Badge key={role} variant="secondary">
+                  {humanizeSlug(role)}
+                </Badge>
+              ))}
               <StatusBadge user={user} />
             </div>
           </div>

@@ -1,3 +1,4 @@
+import { Can } from "@/components/auth/can"
 import { AddActivityDialog } from "@/components/projects/programme/add-activity-dialog"
 import {
   TableCard,
@@ -29,7 +30,11 @@ export function WorkProgrammeCard({
       titleId="work-programme-heading"
       title="Work programme & forecasts"
       titleClassName="text-xl text-heading"
-      action={<AddActivityDialog projectId={projectId} />}
+      action={
+        <Can permission="activities:create">
+          <AddActivityDialog projectId={projectId} />
+        </Can>
+      }
     >
       <Table className="min-w-[44rem]">
         <TableHeader>

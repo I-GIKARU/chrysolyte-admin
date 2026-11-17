@@ -1,4 +1,5 @@
 import { Notice } from "@/components/notice"
+import { Can } from "@/components/auth/can"
 import { AddMilestoneDialog } from "@/components/projects/programme/add-milestone-dialog"
 import { MilestoneProgressInput } from "@/components/projects/programme/milestone-progress-input"
 import {
@@ -33,10 +34,12 @@ export function MilestonesCard({ projectId, milestones }: MilestonesCardProps) {
       title="Milestones"
       titleClassName="text-xl text-heading"
       action={
-        <AddMilestoneDialog
-          projectId={projectId}
-          remainingWeight={Math.max(0, 100 - allocatedWeight)}
-        />
+        <Can permission="milestones:create">
+          <AddMilestoneDialog
+            projectId={projectId}
+            remainingWeight={Math.max(0, 100 - allocatedWeight)}
+          />
+        </Can>
       }
     >
       <Notice>

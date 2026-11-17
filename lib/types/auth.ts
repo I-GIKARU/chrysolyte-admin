@@ -20,7 +20,12 @@ export interface AuthUser {
   username: string
   email: string
   full_name: string
+  phone?: string | null
   role: string
+  roles: string[]
+  project_id?: string | null
+  project_ids?: string[]
+  project_scoped?: boolean
   active: boolean
   must_change_password: boolean
   last_login_at: string

@@ -1,5 +1,6 @@
 "use client"
 
+import { Can } from "@/components/auth/can"
 import { AddOfficeTaskDialog } from "@/components/coo-operations/add-office-task-dialog"
 import { OfficeTaskProgress } from "@/components/coo-operations/office-task-progress"
 import { OfficeTaskStatusBadge } from "@/components/coo-operations/office-task-status-badge"
@@ -39,7 +40,9 @@ export function OfficeWorkLog() {
             internal controls.
           </p>
         </div>
-        <AddOfficeTaskDialog />
+        <Can permission="office:create">
+          <AddOfficeTaskDialog />
+        </Can>
       </div>
 
       {tasks.length === 0 ? (

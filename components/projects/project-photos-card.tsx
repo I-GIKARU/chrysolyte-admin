@@ -16,6 +16,7 @@ import {
   maxProjectPhotos,
 } from "@/lib/schemas/projects"
 import type { AddProjectPhotosFormValues, Project } from "@/lib/types/projects"
+import { useAuth } from "@/providers/auth-provider"
 
 const defaultValues: AddProjectPhotosFormValues = { photos: [] }
 
@@ -24,11 +25,13 @@ type ProjectPhotosCardProps = {
 }
 
 export function ProjectPhotosCard({ project }: ProjectPhotosCardProps) {
+  const { hasPermission } = useAuth()
+  const canUpload = hasPermission("media:upload")
   const hasPhotos = project.photoUrls.length > 0
   const remaining = maxProjectPhotos - project.photoUrls.length
   // With no photos the uploader shows straight away; otherwise on request.
   const [isAdding, setIsAdding] = useState(false)
-  const showUploader = (!hasPhotos || isAdding) && remaining > 0
+  const showUploader = canUpload && (!hasPhotos || isAdding) && remaining > 0
 
   const addPhotos = useAddProjectPhotos()
   const {
@@ -57,6 +60,7 @@ export function ProjectPhotosCard({ project }: ProjectPhotosCardProps) {
       title="Photo"
       titleClassName="pt-2 text-lg"
       action={
+        canUpload &&
         hasPhotos &&
         !isAdding &&
         remaining > 0 && (

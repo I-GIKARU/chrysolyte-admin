@@ -1,3 +1,4 @@
+import { Can } from "@/components/auth/can"
 import { AddWelfareItemDialog } from "@/components/stores/add-welfare-item-dialog"
 import { StockNoticeBadge } from "@/components/stores/stock-notice-badge"
 import { StoreCard, storeCellClassName } from "@/components/stores/store-card"
@@ -15,7 +16,9 @@ export function WelfareStoreCard({ store }: WelfareStoreCardProps) {
       titleId={`welfare-store-${store.id}`}
       title={store.name}
       action={
-        <AddWelfareItemDialog storeId={store.id} storeName={store.name} />
+        <Can permission="welfare_stores:manage">
+          <AddWelfareItemDialog storeId={store.id} storeName={store.name} />
+        </Can>
       }
       className="h-full"
     >

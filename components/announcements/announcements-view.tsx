@@ -1,6 +1,7 @@
 "use client"
 
 import { AnnouncementCard } from "@/components/announcements/announcement-card"
+import { Can } from "@/components/auth/can"
 import { PublishAnnouncementDialog } from "@/components/announcements/publish-announcement-dialog"
 import { useAnnouncements } from "@/hooks/use-announcements"
 
@@ -24,7 +25,9 @@ export function AnnouncementsView() {
             Visible to everyone in the company, newest first.
           </p>
         </div>
-        <PublishAnnouncementDialog />
+        <Can permission="announcements:manage">
+          <PublishAnnouncementDialog />
+        </Can>
       </div>
 
       {announcements.length === 0 ? (

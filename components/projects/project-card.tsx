@@ -5,6 +5,8 @@ import Image from "next/image"
 import Link from "next/link"
 import { Camera, DraftingCompass, HardHat } from "lucide-react"
 
+import { Can } from "@/components/auth/can"
+import { useAuth } from "@/providers/auth-provider"
 import { RemoveProjectDialog } from "@/components/projects/remove-project-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -24,6 +26,8 @@ type ProjectCardProps = {
 }
 
 export function ProjectCard({ project }: ProjectCardProps) {
+  const { hasPermission } = useAuth()
+  const canUpload = hasPermission("media:upload")
   const fileInputRef = useRef<HTMLInputElement>(null)
   const updateCover = useUpdateProjectCover()
   const PhaseIcon = phaseIcons[project.phase]
@@ -56,17 +60,19 @@ export function ProjectCard({ project }: ProjectCardProps) {
           </div>
         )}
 
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-lg"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={updateCover.isPending}
-          aria-label={`Change cover photo of ${project.name}`}
-          className="absolute right-3 bottom-3 rounded-xl bg-black/40 text-foreground backdrop-blur-sm hover:bg-black/60 hover:text-foreground"
-        >
-          <Camera />
-        </Button>
+        {canUpload ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-lg"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={updateCover.isPending}
+            aria-label={`Change cover photo of ${project.name}`}
+            className="absolute right-3 bottom-3 rounded-xl bg-black/40 text-foreground backdrop-blur-sm hover:bg-black/60 hover:text-foreground"
+          >
+            <Camera />
+          </Button>
+        ) : null}
         <input
           ref={fileInputRef}
           type="file"
@@ -109,7 +115,9 @@ export function ProjectCard({ project }: ProjectCardProps) {
           <Button asChild className="h-9 rounded-full px-4 font-semibold">
             <Link href={`/projects/${project.id}`}>Open project</Link>
           </Button>
-          <RemoveProjectDialog project={project} />
+          <Can permission="projects:delete">
+            <RemoveProjectDialog project={project} />
+          </Can>
         </div>
       </div>
     </Card>

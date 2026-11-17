@@ -1,5 +1,6 @@
 "use client"
 
+import { Can } from "@/components/auth/can"
 import { AddProjectDialog } from "@/components/projects/add-project-dialog"
 import { ProjectCard } from "@/components/projects/project-card"
 import { useProjects } from "@/hooks/use-projects"
@@ -19,7 +20,9 @@ export function ProjectsView() {
         >
           Project portfolio
         </h2>
-        <AddProjectDialog />
+        <Can permission="projects:create">
+          <AddProjectDialog />
+        </Can>
       </div>
 
       {projects.length === 0 ? (

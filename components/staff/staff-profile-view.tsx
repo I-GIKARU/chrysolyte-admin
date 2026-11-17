@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ChevronLeft } from "lucide-react"
 
+import { Can } from "@/components/auth/can"
 import { RemoveStaffDialog } from "@/components/staff/remove-staff-dialog"
 import { StaffHealthBadge } from "@/components/staff/staff-health-badge"
 import { UserAvatar } from "@/components/user-avatar"
@@ -196,11 +197,13 @@ export function StaffProfileView({ staffId }: StaffProfileViewProps) {
             </div>
           </div>
           <div className="shrink-0">
-            <RemoveStaffDialog
-              member={member}
-              trigger="button"
-              onRemoved={() => router.replace(staffListHref)}
-            />
+            <Can permission="staff:delete">
+              <RemoveStaffDialog
+                member={member}
+                trigger="button"
+                onRemoved={() => router.replace(staffListHref)}
+              />
+            </Can>
           </div>
         </div>
       </Card>

@@ -1,3 +1,4 @@
+import { Can } from "@/components/auth/can"
 import { RemoveAnnouncementDialog } from "@/components/announcements/remove-announcement-dialog"
 import { Card } from "@/components/ui/card"
 import { formatDate } from "@/lib/format"
@@ -24,7 +25,9 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
         </div>
         {/* -mt/-mr pull the icon button into the corner without shifting the text. */}
         <div className="-mt-1.5 -mr-1.5 shrink-0">
-          <RemoveAnnouncementDialog announcement={announcement} />
+          <Can permission="announcements:manage">
+            <RemoveAnnouncementDialog announcement={announcement} />
+          </Can>
         </div>
       </div>
 
