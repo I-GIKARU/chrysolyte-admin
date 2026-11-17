@@ -48,10 +48,9 @@ export function UserActions({ user }: { user: AuthUser }) {
   const canUpdate = hasPermission("auth:users:update")
   const canDelete = hasPermission("auth:users:delete")
   const canAssignRoles = hasPermission("auth:users:roles")
-  const isSuperAdmin = user.roles?.includes("director") || user.role === "director"
-  const actorIsDirector = currentUser?.roles?.includes("director") ||
-    currentUser?.role === "director"
-  const outranked = isSuperAdmin && !actorIsDirector
+  // The API protects every account holding the `*` wildcard; no one can edit,
+  // disable or delete a director account from this screen.
+  const outranked = user.roles?.includes("director") || user.role === "director"
 
   const mutation = useMutation({
     mutationFn: (pending: Action) => {
@@ -122,7 +121,10 @@ export function UserActions({ user }: { user: AuthUser }) {
             </DropdownMenuItem>
           ) : null}
           {canUpdate ? (
-            <DropdownMenuItem onSelect={() => setResetOpen(true)}>
+            <DropdownMenuItem
+              disabled={outranked}
+              onSelect={() => setResetOpen(true)}
+            >
               <KeyRound aria-hidden="true" />
               Reset password
             </DropdownMenuItem>
@@ -132,7 +134,7 @@ export function UserActions({ user }: { user: AuthUser }) {
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 variant="destructive"
-                disabled={isSelf}
+                disabled={isSelf || outranked}
                 onSelect={() => open("delete")}
               >
                 <Trash2 aria-hidden="true" />
